@@ -1,39 +1,50 @@
 class PostOffice  {
     constructor(queue) {
         this.queue = queue;
+        this.lettersInBox = true;
         this.sendLetter = async () => {
-            let letter = {};
-            if (this.queue.letterList.length>0) {
-                letter = this.queue.letterList[this.queue.letterList.length-1];
-                this.queue.daqueue();
-            } else {
-                return;
-            }
-            let promise = new Promise((resolve, reject) => {
-                Math.random()*10 > 1  ? resolve(
-                    Customer.letterRecieved(letter.firstName, letter.reciever, letter.content)
-                ) : reject (new Error("Letter was not sent"))
-            }, 3000)
+                let letter = {};
+                if (!this.queue.isEmpty()) {
+                    letter = this.queue.letterList[this.queue.letterList.length-1];
+                    this.queue.daqueue();
+                } else {
+                    console.log("There are no letters");
+                    return this.lettersInBox = false;
+                }
+                let promise = new Promise((resolve, reject) => {
+                    Math.random()*10 > 1  ? resolve(
+                        Customer.letterRecieved(letter.firstName, letter.reciever, letter.content)
+                    ) : reject (new Error("Letter was not sent"))
+                }, 3000)
         };
         this.startSending = async () => {
-            setInterval(() => {
-                try {
-                    return this.sendLetter();
-                } catch (error) {
-                    throw new Error(error)
-                }
-            }, 5000)
+
+                setInterval(() => {
+                    if (this.lettersInBox) {
+                        try {
+                            return this.sendLetter();
+                        } catch (error) {
+                            throw new Error(error)
+                        }
+                    } else {
+                        return;
+                    }
+                    }, 5000)
+            }
         }
-    }
 }
 
 class Queue {
-    constructor(props) {
+    constructor() {
         this.letterList = [];
     }
     // Adds an element to the queue
     enqueue(element) {
-        this.letterList.push(element);
+        if (`${element.firstName} ${element.lastName}` !== element.reciever) {
+            this.letterList.push(element);
+        } else {
+            console.log("You cant send letter to yourself")
+        }
     }
     isEmpty() {
         return this.letterList.length === 0;
@@ -50,9 +61,6 @@ class Queue {
         this.isEmpty() && console.log('No elements in Queue');
         return this.letterList[0];
     }
-
-
-
 }
 
 class Customer {
@@ -79,7 +87,7 @@ class Letter extends Customer{
     }
 }
 
-const firstLetter = new Letter('Mika', 'Mikic', 'Djole Peric', 'Djes buraz?');
+const firstLetter = new Letter('Mika', 'Mikic', 'Mika Mikic', 'Djes buraz?');
 const secondLetter = new Letter('Djura', 'Djura', 'Mile Kitic', 'Sta ima?');
 const thirdLetter = new Letter('Jova', 'Jovic', 'Zika Peric', 'Kako si?');
 
