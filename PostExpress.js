@@ -1,11 +1,11 @@
 class PostOffice  {
-    constructor() {
-        this.letterList = [];
+    constructor(queue) {
+        this.queue = queue;
         this.sendLetter = async () => {
             let letter = {};
-            if (this.letterList.length>0) {
-                letter = this.letterList[this.letterList.length-1];
-                this.letterList.splice(-1,1);
+            if (this.queue.letterList.length>0) {
+                letter = this.queue.letterList[this.queue.letterList.length-1];
+                this.queue.daqueue();
             } else {
                 return;
             }
@@ -25,6 +25,34 @@ class PostOffice  {
             }, 5000)
         }
     }
+}
+
+class Queue {
+    constructor(props) {
+        this.letterList = [];
+    }
+    // Adds an element to the queue
+    enqueue(element) {
+        this.letterList.push(element);
+    }
+    isEmpty() {
+        return this.letterList.length === 0;
+    }
+    // Removes an element from the queue
+    daqueue() {
+        if (this.isEmpty()) {
+            return console.log("No letters to send");
+        }
+        return this.letterList.pop();
+    }
+    // Returns the front element of the queue
+    front() {
+        this.isEmpty() && console.log('No elements in Queue');
+        return this.letterList[0];
+    }
+
+
+
 }
 
 class Customer {
@@ -54,6 +82,10 @@ class Letter extends Customer{
 const firstLetter = new Letter('Mika', 'Mikic', 'Djole Peric', 'Djes buraz?');
 const secondLetter = new Letter('Djura', 'Djura', 'Mile Kitic', 'Sta ima?');
 const thirdLetter = new Letter('Jova', 'Jovic', 'Zika Peric', 'Kako si?');
-let postOffice = new PostOffice();
-postOffice.letterList = [firstLetter, secondLetter, thirdLetter];
+
+let queue = new Queue();
+let postOffice = new PostOffice(queue);
+queue.enqueue(firstLetter);
+queue.enqueue(secondLetter);
+queue.enqueue(thirdLetter);
 postOffice.startSending();
