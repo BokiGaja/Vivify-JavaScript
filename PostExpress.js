@@ -1,51 +1,43 @@
 class PostOffice  {
+
     constructor(queue) {
         this.queue = queue;
-        this.lettersInBox = true;
-        this.sendLetter = async () => {
-                let letter = {};
-                if (!this.queue.isEmpty()) {
-                    letter = this.queue.letterList[this.queue.letterList.length-1];
-                    this.queue.daqueue();
-                } else {
-                    console.log("There are no letters");
-                    return this.lettersInBox = false;
-                }
-                let promise = new Promise((resolve, reject) => {
-                    Math.random()*10 > 1  ? resolve(
-                        Customer.letterRecieved(letter.firstName, letter.reciever, letter.content)
-                    ) : reject (new Error("Letter was not sent"))
-                }, 3000)
-        };
-        this.startSending = async () => {
+    }
 
-                setInterval(() => {
-                    if (this.lettersInBox) {
-                        try {
-                            return this.sendLetter();
-                        } catch (error) {
-                            throw new Error(error)
-                        }
-                    } else {
-                        return;
-                    }
-                    }, 5000)
-            }
+    sendLetter = async () => {
+        let letter = {};
+        if (!this.queue.isEmpty()) {
+            letter = this.queue.daqueue();
+        } else {
+            console.log("There are no letters");
+            return;
         }
+
+        new Promise((resolve, reject) => {
+            Math.random() * 10 > 1  ? resolve(
+                letter.sendLetter()
+            ) : reject (new Error("Letter was not sent"))
+        })
+    };
+
+    startSending = () => {
+        setInterval(async () => {
+            await this.sendLetter()
+        }, 10000);
+    }
 }
+
+
 
 class Queue {
     constructor() {
         this.letterList = [];
     }
     // Adds an element to the queue
-    enqueue(element) {
-        if (`${element.firstName} ${element.lastName}` !== element.reciever) {
-            this.letterList.push(element);
-        } else {
-            console.log("You cant send letter to yourself")
-        }
+    enqueue(letter) {
+        this.letterList.push(letter);
     }
+
     isEmpty() {
         return this.letterList.length === 0;
     }
@@ -54,46 +46,71 @@ class Queue {
         if (this.isEmpty()) {
             return console.log("No letters to send");
         }
-        return this.letterList.pop();
+        return this.letterList.shift();
     }
     // Returns the front element of the queue
     front() {
-        this.isEmpty() && console.log('No elements in Queue');
-        return this.letterList[0];
+        if (this.isEmpty()) {
+            console.log('No elements in Queue')
+        } else {
+            return this.letterList[0]
+        }
     }
 }
 
-class Customer {
+class Person {
     constructor(firstName, lastName) {
-        if (new.target === Customer) {
+        if (new.target === Person) {
             throw new TypeError("Cannot construct Abstract instances directly");
         }
         this.firstName = firstName;
         this.lastName = lastName;
     }
-
-    static letterRecieved(sender, reciever, content) {
-        console.log(`Dear ${reciever} you have new mail from: ${sender}. Content of letter: ${content}`)
-    }
-
-
 }
 
-class Letter extends Customer{
-    constructor(firstName, lastName, reciever, content) {
-        super(firstName, lastName);
+class Customer extends Person {
+    constructor(firstName, lastName) {
+        super(firstName, lastName)
+    }
+
+    receiveLetter(letter) {
+        const receiverFullName = `${letter.reciever.firstName} ${letter.reciever.lastName}`
+        const senderFullName = `${letter.sender.firstName} ${letter.sender.lastName}`
+        console.log(`${receiverFullName} you have new mail from: ${senderFullName}. Content of letter: ${letter.content}`)
+    }
+}
+
+class Letter {
+    constructor(sender, reciever, content) {
+        this.sender = sender;
         this.reciever = reciever;
         this.content = content
     }
+
+    sendLetter() {
+        if (this.sender !== this.reciever) {
+            setTimeout(() => {
+                this.reciever.receiveLetter(this);
+            }, 3000)
+        } else {
+            console.log("You cant send letter to yourself")
+        }
+    }
+
 }
 
-const firstLetter = new Letter('Mika', 'Mikic', 'Mika Mikic', 'Djes buraz?');
-const secondLetter = new Letter('Djura', 'Djura', 'Mile Kitic', 'Sta ima?');
-const thirdLetter = new Letter('Jova', 'Jovic', 'Zika Peric', 'Kako si?');
+const person1 = new Customer('Mika', 'Mikic');
+const person2 = new Customer('Zika', 'Zikic');
+const person3 = new Customer('Pera', 'Peric');
+const person4 = new Customer('Boza', 'Bozic');
+const person5 = new Customer('Cone', 'Conic');
+const firstLetter = new Letter(person1, person2, 'Djes buraz?');
+const secondLetter = new Letter(person4, person3, 'Sta ima?');
+const thirdLetter = new Letter(person5, person3, 'Kako si?');
 
 let queue = new Queue();
-let postOffice = new PostOffice(queue);
 queue.enqueue(firstLetter);
 queue.enqueue(secondLetter);
 queue.enqueue(thirdLetter);
+let postOffice = new PostOffice(queue);
 postOffice.startSending();
